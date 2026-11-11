@@ -1,0 +1,14 @@
+struct Order
+  getter item : String
+  getter qty : Int
+  getter price : Float
+end
+
+orders = [Order.new("tea", 2, 4.5), Order.new("cake", 1, 7.0),
+          Order.new("tea", 3, 4.5)]
+
+totals = orders.group_by(&.item)
+  .transform_values { |os| os.sum { |o| o.qty * o.price } }
+totals.sort_by { |item, total| -total }.each do |item, total|
+  puts "#{item.ljust(6)} #{total.round(2)}"
+end

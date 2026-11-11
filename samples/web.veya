@@ -1,0 +1,7 @@
+app = Web::App.new
+app.get "/hello/:name" do |c|
+  c.html "<h1>Hello, #{HTML.escape(c.params["name"])}!</h1>"
+end
+app.get "/api/time" do |c|
+  c.json %({"now": #{Time.now.to_i}})
+end

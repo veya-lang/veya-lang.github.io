@@ -1,0 +1,10 @@
+verbose = false
+files = OptionParser.parse(ARGV) do |o|
+  o.banner = "usage: count [-v] FILE..."
+  o.on("-v", "--verbose", "Say more") { verbose = true }
+end
+files.each do |f|
+  lines = 0
+  File.each_line(f) { lines += 1 }
+  puts verbose ? "#{f}: #{lines} lines" : lines.to_s
+end

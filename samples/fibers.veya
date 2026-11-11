@@ -1,0 +1,8 @@
+results = Channel(String).new
+["a", "b", "c"].each do |name|
+  spawn do
+    sleep 0.01
+    results.send("#{name} done")
+  end
+end
+3.times { puts results.receive }

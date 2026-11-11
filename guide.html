@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide · Veya</title>
+<meta name="description" content="The Veya language: syntax, types, the standard library, tools and performance.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="code.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/">veya<span>.</span></a>
+  <nav><a class="on" href="guide.html">Guide</a><a href="/#performance">Performance</a><a href="/#status">Status</a></nav>
+</div></header>
+<div class="wrap doc">
+  <aside class="toc">
+<a href="#the-language-in-one-page">The language in one page</a>
+<a class="h3" href="#what-s-in-v0-1">What&#x27;s in v0.1</a>
+<a class="h3" href="#left-out-on-purpose">Left out on purpose</a>
+<a href="#quick-start">Quick start</a>
+<a class="h3" href="#backends">Backends</a>
+<a href="#testing">Testing</a>
+<a href="#projects-and-packages">Projects and packages</a>
+<a href="#macros">Macros</a>
+<a href="#example-apps">Example apps</a>
+<a href="#performance">Performance</a>
+<a class="h3" href="#json-and-http">JSON and HTTP</a>
+<a href="#how-it-works">How it works</a>
+  </aside>
+  <main>
+    <h1>The Veya guide</h1>
+    <p>This guide covers everything in Veya 0.1, from the syntax to the tools and the standard library.</p>
+<h2 id="the-language-in-one-page">The language in one page</h2>
+<div class="hl"><pre><span></span><code><span class="c1"># methods: typed parameters, inferred locals, implicit return</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="nb">name</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="n">loud</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Bool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">false</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+<span class="w">  </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Hello, </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">!"</span>
+<span class="w">  </span><span class="n">loud</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="n">msg</span><span class="o">.</span><span class="n">upcase</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">msg</span>
+<span class="k">end</span>
+<span class="nb">puts</span><span class="w"> </span><span class="n">greet</span><span class="w"> </span><span class="s2">"Ferris"</span><span class="p">,</span><span class="w"> </span><span class="ss">loud</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="w">      </span><span class="c1"># optional parens, keyword args</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">square</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w">          </span><span class="c1"># endless methods</span>
+
+<span class="c1"># blocks: yield is inlined; next/break/return work like in Ruby</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">twice</span>
+<span class="w">  </span><span class="k">yield</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">  </span><span class="k">yield</span><span class="w"> </span><span class="mi">2</span>
+<span class="k">end</span>
+<span class="n">twice</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">}</span><span class="w">               </span><span class="c1"># `it` = the single block parameter</span>
+<span class="n">first_big</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sizes</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">s</span><span class="o">|</span><span class="w"> </span><span class="k">break</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1_000</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># first_big : Int?</span>
+
+<span class="c1"># struct = value type (copied), class = reference type (shared, refcounted)</span>
+<span class="n">struct</span><span class="w"> </span><span class="no">Point</span>
+<span class="w">  </span><span class="n">getter</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">Float</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">Float</span>
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">+</span><span class="p">(</span><span class="n">o</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Point</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Point</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">o</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">o</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Player</span>
+<span class="w">  </span><span class="n">property</span><span class="w"> </span><span class="nb">name</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+<span class="w">  </span><span class="vi">@score</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">initialize</span><span class="p">(</span><span class="vi">@name</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># nil is only allowed where the type says so</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">city</span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">User</span><span class="sc">?)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+<span class="w">  </span><span class="n">user</span><span class="o">&amp;.</span><span class="n">address</span><span class="o">&amp;.</span><span class="n">city</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"unknown"</span>
+<span class="k">end</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">)</span><span class="w">              </span><span class="c1"># email : String inside the if</span>
+<span class="w">  </span><span class="n">send_welcome</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="k">return</span><span class="w"> </span><span class="s2">"nothing"</span><span class="w"> </span><span class="k">unless</span><span class="w"> </span><span class="n">n</span><span class="w">            </span><span class="c1"># n is non-nil after this line</span>
+
+<span class="c1"># enums with data, exhaustive pattern matching</span>
+<span class="n">enum</span><span class="w"> </span><span class="no">Event</span>
+<span class="w">  </span><span class="no">Click</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="p">)</span>
+<span class="w">  </span><span class="no">Key</span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Symbol</span><span class="p">)</span>
+<span class="w">  </span><span class="no">Quit</span>
+<span class="k">end</span>
+<span class="k">case</span><span class="w"> </span><span class="n">event</span>
+<span class="k">in</span><span class="w"> </span><span class="no">Click</span><span class="p">(</span><span class="ss">x</span><span class="p">:,</span><span class="w"> </span><span class="ss">y</span><span class="p">:)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">draw</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">)</span>
+<span class="k">in</span><span class="w"> </span><span class="no">Click</span><span class="w">                 </span><span class="k">then</span><span class="w"> </span><span class="kp">nil</span>
+<span class="k">in</span><span class="w"> </span><span class="no">Key</span><span class="p">(</span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="ss">:esc</span><span class="p">)</span><span class="w">       </span><span class="k">then</span><span class="w"> </span><span class="n">close</span>
+<span class="k">in</span><span class="w"> </span><span class="no">Key</span><span class="p">(</span><span class="ss">code</span><span class="p">:)</span><span class="w">            </span><span class="k">then</span><span class="w"> </span><span class="n">type</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="k">in</span><span class="w"> </span><span class="no">Quit</span><span class="w">                  </span><span class="k">then</span><span class="w"> </span><span class="nb">exit</span>
+<span class="k">end</span><span class="w">                      </span><span class="c1"># leave out a branch and it doesn't compile</span>
+
+<span class="c1"># integers trap on overflow; wrapping is explicit</span>
+<span class="no">Int</span><span class="o">::</span><span class="no">MAX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w">             </span><span class="c1"># error: integer overflow in +</span>
+<span class="no">Int</span><span class="o">::</span><span class="no">MAX</span><span class="w"> </span><span class="o">&amp;+</span><span class="w"> </span><span class="mi">1</span><span class="w">            </span><span class="c1"># wraps</span>
+</code></pre></div>
+
+<h3 id="what-s-in-v0-1">What's in v0.1</h3>
+<ul>
+<li><strong>Types:</strong> <code>Int</code> (64-bit, traps on overflow; literals <code>1_000</code>, <code>0xff</code>, <code>0b1010</code>, <code>0o755</code>; bitwise <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> with the shift count taken mod 64), <code>Float</code>, <code>Bool</code>, <code>String</code>, <code>Symbol</code> (interned at compile time), <code>Range</code>, <code>Array(T)</code>, tuples <code>{Int, String}</code>, <code>T?</code>, <code>struct</code>, <code>class</code>, <code>enum</code>.</li>
+<li><strong>Type inference:</strong> local inference inside methods. Parameters carry types, and return types are inferred unless the method is recursive.</li>
+<li><strong>Generic methods:</strong> <code>def first_or(xs : Array(T), fallback : T) : T</code>. A single capital letter that isn't a type is a type parameter. Each call works the parameters out from its arguments and gets its own copy (<code>first_or&lt;Int&gt;</code>).</li>
+<li><strong>Generics:</strong> <code>class Stack(T)</code>, <code>struct Pair(A, B)</code>, used as <code>Stack(Int).new</code> or in types (<code>Node(T)?</code>). Each use makes a copy of the type with the parameters replaced (monomorphization, like Rust and C++), so generic code runs as fast as written-out code.</li>
+<li><strong>Inheritance:</strong></li>
+<li><code>class Dog &lt; Animal</code>: a subclass gets its parent's fields and methods and can override them. A <code>Dog</code> goes wherever an <code>Animal</code> is expected, and <code>[Dog.new, Cat.new]</code> is an <code>Array(Animal)</code>.</li>
+<li>A call to a method some subclass overrides is chosen by the object's own class: a hidden type id (the first field) and a <code>switch</code>, since the whole program is known. Calls nobody overrides stay direct.</li>
+<li><code>super(args)</code> (<code>super</code> alone passes the same arguments), <code>is_a?</code>, <code>kind_of?</code>, <code>instance_of?</code>, and <code>x.as(Dog)</code> (raises <code>TypeError</code> if it isn't one).</li>
+<li><code>p</code>, <code>to_s</code> and <code>to_json</code> show the object's own class.</li>
+<li>Exception classes: <code>class NotFound &lt; AppError; end</code> (down to <code>StandardError</code>) are raised by name, and <code>rescue AppError</code> catches the kinds below it, including the runtime's own (<code>rescue IndexError</code> catches a <code>KeyError</code>). <code>NotFound.new("msg")</code> is an exception value.</li>
+<li><strong>Modules:</strong></li>
+<li><code>module M ... end</code> with methods to mix in: <code>include M</code> copies them into a class or struct (methods it defines itself win), <code>extend M</code> adds them as class methods. Modules can include modules.</li>
+<li><code>self</code> in a module's signatures is the including type: <code>def &lt;(other : self) : Bool</code>.</li>
+<li><code>def self.f</code> in a module is a module function, called as <code>M.f(...)</code>.</li>
+<li><code>abstract def draw : String</code> in a module makes every type that includes it define <code>draw</code> (a compile error names what's missing). In a class, subclasses define it, calls on the base class run the object's own method, and the base class can't be created. See <code>examples/abstract.veya</code>.</li>
+<li><code>include Comparable</code> plus <code>&lt;=&gt;</code> gives <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>==</code>, <code>between?</code> and <code>clamp</code> (written in Veya: <code>src/prelude/comparable.veya</code>).</li>
+<li><code>require_relative "lib/x"</code> (or <code>require "./lib/x"</code>) loads another file once.</li>
+<li><strong>Exceptions:</strong></li>
+<li><code>raise "msg"</code>, <code>raise ArgumentError, "msg"</code>, <code>raise IOError.new("msg")</code>, <code>raise e</code>, and a bare <code>raise</code> in a rescue clause.</li>
+<li><code>begin ... rescue Kind1, Kind2 =&gt; e ... else ... ensure ... end</code>, also as the body of a <code>def</code> or a <code>do</code> block, <code>retry</code>, and <code>x = expr rescue fallback</code>. Crystal's <code>rescue e : Kind1 | Kind2</code> and <code>rescue e</code> work too.</li>
+<li>Kinds are matched by name; <code>rescue =&gt; e</code> (or <code>rescue StandardError</code>) catches any. <code>e.message</code>, <code>e.class</code>, <code>e.inspect</code>.</li>
+<li>The runtime raises <code>IndexError</code>, <code>KeyError</code>, <code>ZeroDivisionError</code> and <code>NilAssertionError</code>. An exception nobody rescues stops the program with its message.</li>
+<li><code>ensure</code> runs on <code>return</code> too. <code>break</code>/<code>next</code> out of a begin with ensure isn't supported yet.</li>
+<li>Exceptions travel as a flag the generated code checks after calls to methods that can raise, and every function leaves through its normal exit, so nothing leaks.</li>
+<li><strong>Closures:</strong></li>
+<li><code>-&gt;(x : Int) { x * 2 }</code>, called with <code>.call</code>. Parameter types can be left out where the Proc type is known.</li>
+<li>Proc types are written <code>Int -&gt; Int</code>, <code>(Int, String) -&gt; Bool</code>, <code>-&gt; Nil</code>.</li>
+<li>A method keeps its block with <code>def on(&amp;handler : String -&gt; Nil)</code>.</li>
+<li><code>&amp;proc</code> passes a Proc where a block goes: <code>[1, 2].map(&amp;square)</code>.</li>
+<li>Captured variables are shared with the method, as in Ruby: they live in a heap cell, so a counter lambda works. Each loop iteration gets its own block variables.</li>
+<li><code>next v</code> leaves a lambda with <code>v</code>.</li>
+<li><strong>Blocks:</strong></li>
+<li><code>yield</code> blocks are inlined.</li>
+<li><code>&amp;.method</code> and <code>&amp;:sym</code> work as shorthand blocks.</li>
+<li><code>it</code> names the single block parameter.</li>
+<li><code>loop do ... end</code> loops until <code>break</code>.</li>
+<li><strong>Iteration:</strong></li>
+<li>Lazy, fused adapters: <code>map</code>, <code>select</code>, <code>filter</code>, <code>reject</code>.</li>
+<li>Terminals: <code>each</code>, <code>each_with_index</code>, <code>sum</code>, <code>count</code>, <code>find</code>, <code>any?</code>, <code>all?</code>, <code>none?</code>, <code>reduce</code>, <code>min</code>/<code>max</code>, <code>min_by</code>/<code>max_by</code>, <code>sort_by</code>, <code>flat_map</code>, <code>take_while</code>, <code>each_slice</code>, <code>index</code>, <code>to_a</code>, <code>join</code>.</li>
+<li>Counting loops: <code>times</code>, <code>upto</code>, <code>downto</code>, <code>step</code>.</li>
+<li><strong>Control flow:</strong> <code>if</code>/<code>elsif</code>/<code>else</code>, <code>unless</code>, <code>while</code>, <code>until</code>, statement modifiers, ternary, <code>case/when</code> with values and ranges, <code>case/in</code> patterns with exhaustiveness checks, multiple assignment.</li>
+<li><strong>Optionals:</strong> <code>&amp;.</code>, <code>||</code>, <code>||=</code>, <code>.nil?</code>, <code>.not_nil!</code>. Narrowing works on <code>if x</code>, <code>if (x = ...)</code>, <code>&amp;&amp;</code> and early <code>return</code>. Uninitialized variables are caught at compile time.</li>
+<li><strong>Strings:</strong> <code>"..."</code> interpolates <code>#{}</code>, <code>'...'</code> doesn't. <code>%(say "hi" #{name})</code> and <code>%Q[...]</code> interpolate too, <code>%q(...)</code> doesn't. Their brackets nest, so quotes need no escaping (handy for JSON). <code>s &lt;&lt; "more"</code> (also chained, on a variable or <code>@field</code>) grows a string in place when nothing else holds it, so building one piece by piece is linear; another variable holding the same string keeps the old text. Interpolation, plus <code>upcase</code>, <code>split</code>, <code>gsub</code>, <code>strip</code>, <code>rjust</code>, <code>chars</code>, <code>lines</code>, <code>include?</code>, slicing (including endless ranges, <code>s[3..]</code>), <code>rjust(5, "0")</code> and more.</li>
+<li>Strings are UTF-8, and sizes and indexes count characters as in Ruby: <code>"zażółć".size</code> is 6, <code>s[0, 2]</code> and <code>reverse</code> keep letters whole, and <code>upcase</code> gives <code>"ZAŻÓŁĆ"</code>. <code>bytesize</code>, <code>bytes</code> and <code>byteslice</code> work on bytes.</li>
+<li>A string remembers whether it's all ASCII, so indexing ASCII text stays O(1).</li>
+<li><strong>Regular expressions:</strong> <code>/(\d+)-(\d+)/i</code> literals, checked while compiling and compiled once at run time.</li>
+<li><code>s =~ re</code> gives the position (or nil), plus <code>match?</code>, <code>match</code> (<code>[whole, group1, ...]</code> or nil), <code>scan</code> (groups become arrays), <code>sub</code>/<code>gsub</code> (with <code>\1</code> in the replacement or a block), <code>split</code>, <code>!~</code>, and <code>case s when /re/</code>.</li>
+<li><code>Regex.new(str)</code> raises <code>RegexpError</code> for a bad pattern.</li>
+<li>Ruby's syntax is translated for the <code>regex</code> crate: <code>^</code>/<code>$</code> match at line ends, <code>/m</code> lets <code>.</code> match newlines, <code>\h</code> is a hex digit. There are no backreferences or lookaround.</li>
+<li><strong>Arrays:</strong> <code>%w[a b c]</code>, <code>Array.new(n, value)</code>, <code>push</code>/<code>&lt;&lt;</code>, <code>pop</code>, <code>shift</code>, <code>first</code>/<code>last</code> (returning <code>T?</code>), <code>[i]</code> (traps when out of range), <code>[i]?</code> (returns nil), slicing, <code>sort</code>, <code>uniq</code>, <code>compact</code>, <code>flatten</code>, <code>+</code>, <code>-</code>, and more. <code>zip</code> (stops at the shorter array), <code>partition { }</code>, <code>to_h</code> (from <code>{key, value}</code> tuples) and <code>each_with_index</code> without a block give or take tuples.</li>
+<li><strong>Tuples:</strong> <code>{1, "a"}</code> has type <code>{Int, String}</code> (also written <code>Tuple(Int, String)</code>).</li>
+<li>A tuple is stored inline like a struct, compared and hashed by value (so it can be a Hash key), and printed as <code>{1, "a"}</code>. <code>to_json</code> makes it a JSON array.</li>
+<li><code>t[0]</code> and <code>t[-1]</code> take an index written in the code, since each element has its own type. <code>first</code>, <code>last</code>, <code>size</code>, and <code>to_a</code> when all elements share a type.</li>
+<li><code>a, b = t</code> takes one apart, and so does a block with more parameters than it's given: <code>pairs.each { |name, score| ... }</code>.</li>
+<li>Methods return several values as a tuple: <code>def min_max(xs : Array(Int)) : {Int, Int}</code>.</li>
+<li>See <code>examples/tuples.veya</code>.</li>
+<li><strong>Set:</strong> <code>Set(String).new</code>, <code>Set(Int).new([1, 2])</code>, <code>&lt;&lt;</code>/<code>add</code>, <code>add?</code>, <code>include?</code>, <code>delete</code>, <code>size</code>, <code>each</code>, <code>to_a</code>, <code>|</code>, <code>&amp;</code>, <code>-</code>, <code>subset?</code>, <code>superset?</code>, <code>==</code>. It's in insertion order and written in Veya (<code>src/prelude/set.veya</code>).</li>
+<li><strong>Sorting:</strong> <code>sort</code>, <code>sort_by { |x| key }</code>, and <code>sort { |a, b| a &lt;=&gt; b }</code> with a block that compares, all stable.</li>
+<li><strong>Hash:</strong> <code>Hash(K, V)</code>, insertion-ordered like Ruby's.</li>
+<li>Creating: <code>{"a" =&gt; 1}</code>, <code>{name: "x"}</code> (Symbol keys), <code>{} of String =&gt; Int</code>, <code>Hash(String, Int).new(0)</code> (a default for missing keys).</li>
+<li>Access: <code>h[k]</code> (an error for a missing key), <code>h[k]?</code> (nil), <code>fetch(k, default)</code>, <code>h[k] = v</code>, <code>h[k] += 1</code>, <code>h[k] ||= v</code>.</li>
+<li>Methods: <code>key?</code>, <code>value?</code>, <code>delete</code>, <code>keys</code>, <code>values</code>, <code>size</code>, <code>empty?</code>, <code>merge</code>, <code>update</code>, <code>clear</code>, <code>dup</code>, <code>==</code>.</li>
+<li>With a block <code>|key, value|</code>: <code>each</code>, <code>each_key</code>, <code>each_value</code>, <code>map</code>, <code>select</code>, <code>reject</code>, <code>count</code>, <code>sum</code>, <code>any?</code>, <code>all?</code>, <code>transform_values</code>.</li>
+<li>Entries as <code>{key, value}</code> tuples: <code>to_a</code>, <code>sort_by</code>, <code>min_by</code>, <code>max_by</code>, <code>find</code>, <code>partition</code>, <code>group_by</code>, <code>reduce</code>, <code>each_with_index</code>, and <code>each { |entry| ... }</code> with one parameter.</li>
+<li>From arrays: <code>tally</code> and <code>group_by</code>.</li>
+<li>Keys can be <code>Int</code>, <code>Float</code>, <code>String</code>, <code>Symbol</code>, <code>Bool</code>, structs (compared by value, field by field) and classes (by identity).</li>
+<li><strong>JSON:</strong></li>
+<li>Writing: <code>x.to_json</code> and <code>JSON.generate(x)</code> work for every type. Structs and classes become objects. Data enum variants become <code>{"type": "Name", ...}</code>. <code>nil</code> becomes <code>null</code>. A type can define its own <code>to_json</code>.</li>
+<li>Typed reading: <code>User.from_json(text)</code>, <code>Array(User).from_json(text)</code>, <code>Hash(String, Int).from_json(text)</code>. The reader for each type is generated at compile time and reads what <code>to_json</code> writes, including <code>@[JSON(key: ...)]</code> names. A missing key takes the field's default, or nil for an optional field. Anything else raises <code>JSON::ParseError</code> naming the place: <code>expected an integer for User.id, got a string</code>, or <code>missing key "name" for User</code>.</li>
+<li>Untyped reading: <code>JSON.parse(text)</code> gives a <code>JSON::Any</code>. Index it with <code>j["key"]</code> / <code>j[0]</code> (a null value when missing) or <code>j["key"]?</code> (nil). Read it with <code>as_s</code>, <code>as_i</code>, <code>as_f</code>, <code>as_bool</code>, <code>as_a</code>, <code>as_s?</code>. It also has <code>size</code>, <code>keys</code>, <code>nil?</code> and <code>to_json</code>. A field can have type <code>JSON::Any</code> to keep part of a document as it is.</li>
+<li>See <code>examples/json_parse.veya</code>.</li>
+<li><strong>IO (files, pipes, standard streams):</strong></li>
+<li><code>File.open(path, mode = "r")</code> gives an <code>IO</code>; with a block, the file is closed after the block. Modes are <code>"r"</code>, <code>"w"</code>, <code>"a"</code>, each with an optional <code>"+"</code>.</li>
+<li>Reading: <code>gets</code> (a line with its <code>"\n"</code>, or nil at the end), <code>each_line { |line| ... }</code> (<code>each_line(chomp: true)</code> drops the newlines), <code>read</code> (the rest), <code>read(n)</code> (up to n bytes, nil at the end), <code>readlines</code> (without newlines), <code>eof?</code>.</li>
+<li>Writing: <code>puts</code>, <code>print</code> and <code>&lt;&lt;</code> take any value (<code>f &lt;&lt; "n = " &lt;&lt; n &lt;&lt; "\n"</code>), <code>write(s)</code> gives the byte count, <code>flush</code>.</li>
+<li><code>File.each_line(path) { |line| ... }</code> reads a file of any size line by line.</li>
+<li>An <code>IO</code> is reference counted: <code>close</code> closes it, and so does dropping the last reference, so files opened in a loop don't run out of descriptors. <code>closed?</code>, <code>fileno</code>, <code>tty?</code>, <code>path</code>.</li>
+<li><code>STDIN</code>, <code>STDOUT</code> and <code>STDERR</code> are <code>IO</code> values. <code>STDOUT</code> and <code>STDIN</code> share the buffers of <code>puts</code> and <code>gets</code>, so mixing them keeps the order.</li>
+<li>Errors raise <code>Errno::ENOENT</code>, <code>Errno::EACCES</code>, <code>IOError</code> (for a closed file, or reading one opened for writing), and so on.</li>
+<li>See <code>examples/io.veya</code>.</li>
+<li><strong>Processes:</strong></li>
+<li><code>`ls #{dir}`</code> runs a command through the shell and gives what it printed. <code>system("make test")</code> gives true when it exits with 0. <code>Process.last_status</code> is the exit status of the last one.</li>
+<li><code>Process.run("git", ["status"])</code> runs a program without a shell, with the same standard streams, and gives its exit status. <code>Process.capture(cmd, args)</code> gives what it printed.</li>
+<li><code>IO.popen("sort") { |io| ... }</code> reads what a command prints (<code>"r"</code>, the default) or writes to it (<code>"w"</code>). <code>close</code> gives the exit status.</li>
+<li><code>abort("message")</code> prints to stderr and exits with 1. <code>exit(code)</code> flushes output first.</li>
+<li><strong>Command-line options:</strong> <code>OptionParser</code>, written in Veya (<code>src/prelude/option_parser.veya</code>):
+    <code>ruby
+    verbose = false
+    name = "world"
+    files = OptionParser.parse(ARGV) do |o|
+      o.banner = "usage: greet [options] FILE..."
+      o.on("-v", "--verbose", "Say more") { verbose = true }
+      o.on("-n NAME", "--name=NAME", "Who to greet") { |v| name = v }
+      o.on("-h", "--help", "Show this help") { puts o; exit }
+    end</code></li>
+<li><code>parse</code> gives back the arguments that aren't options. A switch with a value name takes a value: <code>-nBob</code>, <code>-n Bob</code>, <code>--name=Bob</code> and <code>--name Bob</code> all work. Short flags combine (<code>-vq</code>), and <code>--</code> ends the options.</li>
+<li><code>o.separator "text"</code> adds a line to the help, and <code>o.help</code> (or <code>puts o</code>) prints it with the switches lined up.</li>
+<li>An unknown option or a missing value raises <code>OptionError</code> with a message like <code>invalid option: --colour</code>. Uncaught, it prints <code>error: ...</code> and exits with 1.</li>
+<li>See <code>examples/options.veya</code>.</li>
+<li><strong>Files and the system:</strong></li>
+<li><code>File.read</code>, <code>write</code>, <code>append</code>, <code>readlines</code>, <code>exist?</code>, <code>file?</code>, <code>directory?</code>, <code>size</code>, <code>delete</code>, <code>rename</code>, <code>basename</code>, <code>dirname</code>, <code>extname</code>, <code>expand_path</code>, <code>join</code>.</li>
+<li><code>Dir.children</code>, <code>Dir.glob("src/**/*.veya")</code>, <code>Dir.exist?</code>, <code>Dir.mkdir</code>, <code>FileUtils.mkdir_p</code>, <code>Dir.pwd</code>.</li>
+<li>Failures raise <code>Errno::ENOENT</code>, <code>Errno::EACCES</code>, <code>IOError</code>, and so on.</li>
+<li><code>ENV["X"]</code> (a <code>String?</code>), <code>ENV["X"] = v</code>, <code>ENV.fetch</code>, <code>ENV.key?</code>, <code>ENV.keys</code>, <code>STDIN.read</code>.</li>
+<li><code>Time.now</code>, <code>Time.local(y, m, d, h, min)</code>, <code>Time.at(secs)</code>, then <code>year</code>/<code>month</code>/<code>day</code>/<code>hour</code>/<code>min</code>/<code>sec</code>/<code>wday</code>/<code>yday</code>, <code>+ seconds</code>, <code>t2 - t1</code> (a Float), comparisons, <code>strftime</code>, <code>to_s</code>. <code>Time</code> is written in Veya (<code>src/prelude/time.veya</code>).</li>
+<li><strong>Fibers (concurrency):</strong></li>
+<li><code>spawn { ... }</code> runs a block concurrently. Fibers share one OS thread and switch only where they wait: <code>Channel(T)#send</code>/<code>receive</code>, <code>sleep</code>, <code>Fiber.yield</code>. Reference counts stay plain integers and nothing races.</li>
+<li><code>Channel(Int).new</code> (unbuffered: <code>send</code> waits for a receiver) or <code>Channel(Int).new(10)</code> (buffered), <code>receive</code> (raises <code>ClosedError</code> when closed), <code>receive?</code> (nil when closed), <code>close</code>, <code>closed?</code>.</li>
+<li><code>WaitGroup</code> (<code>add</code>, <code>done</code>, <code>wait</code>) is written in Veya.</li>
+<li>The program waits for its fibers before it ends. If every fiber waits and none can continue, it stops with "deadlock". An exception nobody rescues in a fiber stops the program.</li>
+<li>Each fiber has its own stack (256 KB with a guard page). Switching saves the callee-saved registers, a few lines of assembly for arm64 and x86-64.</li>
+<li>Sockets don't block the other fibers: a fiber waiting on <code>accept</code>, <code>gets</code>, <code>read</code> or <code>write</code> lets the rest run, and the scheduler polls the descriptors when nothing else is ready. Files, pipes and <code>gets</code> on standard input still block every fiber.</li>
+<li><strong>OS threads (parallelism):</strong></li>
+<li><code>t = Thread.new { work(n) }</code> runs a block on its own OS thread. <code>t.value</code> waits and gives its result, <code>t.join</code> waits, <code>t.alive?</code> checks. Four threads on four cores ran a CPU-bound loop 5x faster than one.</li>
+<li>Threads share nothing. The block works on deep copies of the values it uses, made before it starts. Its result moves to the parent when it's done. So reference counts stay plain integers and there are no data races.</li>
+<li>Changing a variable from outside in a thread's block is a compile error ("return the result instead"). So is using something that can't be copied, like a Proc, a Channel or a socket.</li>
+<li>An exception the thread doesn't rescue is raised again by <code>join</code>/<code>value</code> in the parent.</li>
+<li>Each thread has its own fibers, exception state and random numbers; output from threads goes through one locked buffer.</li>
+<li><strong>Web apps:</strong> <code>Web::App</code>, a small Sinatra-like framework written in Veya (<code>src/prelude/web.veya</code>):
+    <code>ruby
+    app = Web::App.new
+    app.get "/hello/:name" do |c|
+      name = c.params["name"]
+      c.html ECR.render("views/hello.ecr")
+    end
+    app.post "/notes" do |c|
+      notes &lt;&lt; (c.form["text"]? || "")
+      c.redirect "/notes"
+    end
+    app.static File.join(__DIR__, "public"), "/static"
+    app.run(3000)</code></li>
+<li>Routes for <code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code> and <code>delete</code>, with <code>:name</code> parts and a trailing <code>*</code>. A form's <code>_method=DELETE</code> field stands in for methods HTML forms lack. Unknown paths give 404, a known path with another method 405, and a block that raises gives 500 (logged on stderr).</li>
+<li>The context <code>c</code> has <code>params</code>, <code>query</code>, <code>form</code>, <code>param(name)</code> (any of them), <code>request</code> (method, path, headers, body), <code>status=</code>, <code>header(name, value)</code>, and <code>html</code>, <code>text</code>, <code>json</code>, <code>redirect</code>, <code>not_found</code> to answer.</li>
+<li><code>static(dir, prefix)</code> serves files with their MIME types and refuses paths with <code>..</code>. Each request is logged as <code>GET /hello/x 200 4µs</code> unless <code>app.log = false</code>.</li>
+<li>Underneath is <code>HTTP::Server.new { |req| HTTP::Response.text("hi") }</code> with <code>listen_and_serve(port)</code>. It reads HTTP/1.1 with keep-alive, and each connection runs in its own fiber, so a slow client doesn't hold up the others. <code>workers = n</code> forks n processes for n cores.</li>
+<li>One worker answers about 85k keep-alive requests a second on an M-series Mac (<code>ab -k -c 100</code>), and four reach the limit of <code>ab</code> itself (about 90k).</li>
+<li><code>__DIR__</code> and <code>__FILE__</code> are the source file's folder and path, as compiled.</li>
+<li>See <code>examples/web.veya</code>, which starts its server in a child process and checks it with the HTTP client.</li>
+<li><strong>Templates:</strong> <code>ECR.render("views/page.ecr")</code> (the path is relative to the file) is compiled into the program at the place of the call, so the template sees the local variables there, like Crystal's ECR and Ruby's ERB.</li>
+<li><code>&lt;%= expr %&gt;</code> puts in <code>expr.to_s</code>, HTML-escaped. <code>&lt;%== expr %&gt;</code> puts it in as it is (a layout's <code>content</code>, say).</li>
+<li><code>&lt;% code %&gt;</code> runs code: <code>&lt;% items.each do |i| %&gt; ... &lt;% end %&gt;</code>. <code>&lt;%# comment %&gt;</code>, <code>&lt;%%</code> for a literal <code>&lt;%</code>, and <code>-%&gt;</code> drops the newline after a tag.</li>
+<li>Errors point at the line of the <code>.ecr</code> file. See <code>examples/templates.veya</code>.</li>
+<li><strong>Web text:</strong> <code>HTML.escape(s)</code>, <code>URI.encode_www_form_component(s)</code> / <code>decode_www_form_component(s)</code> (<code>+</code> for spaces), <code>URI.encode_path_segment</code> / <code>URI.decode</code> (<code>%20</code>).</li>
+<li><strong>HTTP client:</strong> <code>HTTP.get(url)</code>, <code>HTTP.post(url, body, headers: {...})</code>, and <code>put</code>, <code>patch</code>, <code>delete</code>, <code>head</code> give an <code>HTTP::Response</code> with <code>status</code>, <code>success?</code>, <code>body</code> and <code>headers</code> (names in lower case).</li>
+<li>HTTPS uses rustls with Mozilla's root certificates built in, so nothing is needed from the system. Redirects are followed (up to 5) and chunked bodies are decoded.</li>
+<li>Failures (no connection, a bad certificate, a bad URL) raise <code>HTTP::Error</code>, which is an <code>IOError</code>.</li>
+<li>TLS is linked only into programs that make requests: hello world stays at 460 KB, and a program using HTTPS is about 1.8 MB.</li>
+<li>Each request opens its own connection. There's no keep-alive or streaming of big bodies yet.</li>
+<li>See <code>examples/http.veya</code>.</li>
+<li><strong>Networking and processes:</strong></li>
+<li><code>TCPServer.new(port)</code>, then <code>accept</code>, <code>port</code> and <code>close</code> on the server;</li>
+<li><code>TCPSocket#gets</code>, <code>read(n)</code>, <code>write</code>, <code>&lt;&lt;</code> and <code>close</code>, with sockets closed when the last reference is dropped;</li>
+<li><code>fork</code>, <code>Process.wait</code> (any child, or <code>Process.wait(pid)</code> for its exit status), <code>Process.kill(pid, signal = 15)</code>, <code>Process.pid</code> and <code>Etc.nprocessors</code>.</li>
+<li><strong>SQLite</strong> (built into the runtime): <code>db = Sqlite.open("app.db")</code> (or <code>":memory:"</code>), <code>db.exec(sql)</code>, and <code>db.exec(sql, values)</code> / <code>db.query(sql, values)</code> with <code>?</code> placeholders filled from an <code>Array(String)</code>, so values never become SQL. <code>changes</code>, <code>last_id</code>, <code>close</code>. A query gives a cursor: <code>while st.next</code>, then <code>st.int(i)</code>, <code>float(i)</code>, <code>text(i)</code>, <code>null?(i)</code>, <code>name(i)</code>, <code>columns</code>. An SQL error stops the program with SQLite's message. See <code>apps/sqlite_demo.veya</code>.</li>
+<li><strong>Calling C:</strong></li>
+<li>A <code>lib</code> block declares C functions with C types, and <code>LibZ.crc32(...)</code> calls them. Both backends call C directly, with no wrapper code.
+    <code>ruby
+    @[Link("z")]                  # -lz; a path to a library works too
+    lib LibZ
+      fun crc32(crc : UInt64, buf : String, len : UInt32) : UInt64
+    end
+    lib LibC
+      fun getenv(name : String) : String?                           # NULL is nil
+      fun snprintf(buf : Pointer, n : SizeT, fmt : String, ...) : Int32
+      fun c_abs = abs(x : Int32) : Int32                             # another name
+    end
+    puts LibZ.crc32(0, "hello world", 11)</code></li>
+<li>C types: <code>Int8</code>…<code>Int64</code>, <code>UInt8</code>…<code>UInt64</code>, <code>SizeT</code>, <code>Float32</code>, <code>Float64</code>, <code>Bool</code>, <code>Pointer</code>, <code>String</code> (passed as <code>const char *</code>; a result is copied into a new String) and <code>String?</code> (NULL is nil).</li>
+<li>Arguments are converted at the call. A Veya <code>Int</code> is narrowed to the declared width, and results are widened back.</li>
+<li>Variadic functions must say <code>...</code>, since Apple's arm64 passes those arguments differently. Extra arguments go as C's promotions do: <code>Int</code> as <code>int64_t</code> (use <code>%ld</code>), <code>Float</code> as <code>double</code>, <code>String</code> as <code>char *</code>.</li>
+<li><code>Pointer</code> is raw memory:<ul>
+<li><code>Pointer.malloc(n)</code> (zeroed) and <code>free</code>;</li>
+<li><code>read_i32(offset = 0)</code>, <code>read_u8</code>, <code>read_f64</code>, <code>read_ptr</code>, <code>read_bool</code> and the other widths, each with a matching <code>write_*(offset, value)</code>;</li>
+<li><code>read_string</code> (up to the NUL), <code>read_string(len)</code> and <code>write_string(offset, s)</code>;</li>
+<li><code>offset(n)</code>, <code>null?</code>, <code>address</code>, <code>Pointer.null</code> and <code>Pointer.new(address)</code>.</li>
+</ul>
+</li>
+<li>Like in C, nothing checks a pointer's memory: a bad one crashes the program. <code>veya run</code> loads the libraries into the JIT. <code>veya build</code> links them, finding Homebrew's on macOS.</li>
+<li>See <code>examples/ffi.veya</code>.</li>
+<li><strong>Globals:</strong> <code>puts</code>, <code>print</code>, <code>p</code>, <code>gets</code>, <code>rand</code>, <code>sleep</code>, <code>clock</code>, <code>typeof</code>, <code>assert</code>, <code>exit</code>, <code>ARGV</code>, <code>STDOUT.tty?</code>, <code>Math.*</code>, constants.</li>
+<li><strong>Macros:</strong> <code>macro def</code>, <code>define_method</code>, <code>quote</code>, reflection over fields (see <a href="#macros">Macros</a>).</li>
+<li><strong>Error messages:</strong> compile errors show your code, a plain-language label and a fix you can paste, with "did you mean" suggestions.</li>
+</ul>
+<h3 id="left-out-on-purpose">Left out on purpose</h3>
+<p><code>eval</code> and <code>ObjectSpace</code> need a runtime that can see and change the program
+while it runs. Veya compiles ahead of time instead; macros cover most uses of
+<code>eval</code>.</p>
+<h2 id="quick-start">Quick start</h2>
+<div class="hl"><pre><span></span><code>cargo<span class="w"> </span>build<span class="w"> </span>--release
+./target/release/veya<span class="w"> </span>run<span class="w"> </span>examples/hello.veya<span class="w">      </span><span class="c1"># compiled in memory and run (JIT), ~20 ms</span>
+./target/release/veya<span class="w"> </span>build<span class="w"> </span>app.veya<span class="w"> </span>-o<span class="w"> </span>app<span class="w">      </span><span class="c1"># optimized native binary</span>
+./target/release/veya<span class="w"> </span>build<span class="w"> </span>--debug<span class="w"> </span>app.veya<span class="w">     </span><span class="c1"># for lldb/gdb: breakpoints on .veya lines</span>
+./target/release/veya<span class="w"> </span>check<span class="w"> </span>app.veya<span class="w">             </span><span class="c1"># type-check only</span>
+./target/release/veya<span class="w"> </span>expand<span class="w"> </span>app.veya<span class="w">            </span><span class="c1"># print the program with macros expanded</span>
+./target/release/veya<span class="w"> </span>fmt<span class="w"> </span>app.veya<span class="w">               </span><span class="c1"># re-indent (fmt --check only reports)</span>
+./target/release/veya<span class="w"> </span>repl<span class="w">                      </span><span class="c1"># interactive session, like irb</span>
+cargo<span class="w"> </span><span class="nb">test</span><span class="w">                                       </span><span class="c1"># examples via JIT, executable and C + error messages</span>
+</code></pre></div>
+
+<p>Compilation is incremental, in two layers (both in <code>~/.cache/veya</code>;
+<code>VEYA_NO_CACHE=1</code> turns them off):</p>
+<ul>
+<li>A program whose files, options and compiler are unchanged isn't compiled
+  again; the earlier build is reused.</li>
+<li>Otherwise each function's machine code is reused when the function is
+  unchanged. Cranelift's incremental cache hashes the function's IR, and calls
+  and data are referenced by name, so editing one method recompiles just that
+  method. With <code>VEYA_TIME=1</code>, after changing one function of
+  <code>apps/json_api.veya</code>: <code>functions: 1 compiled, 34 reused from the cache</code>. This
+  applies to <code>run</code> (JIT) and <code>build</code>.</li>
+</ul>
+<p>Checking always covers the whole program, but it takes about a millisecond.</p>
+<p>Debug builds (<code>--debug</code>) carry DWARF for the Veya source. Cranelift writes
+the line table, a compile unit with every function, and <code>.debug_frame</code> from its
+unwind information, so breakpoints and backtraces work on <code>.veya</code> lines (on macOS
+<code>dsymutil</code> collects it into <code>app.dSYM</code>):</p>
+<div class="hl"><pre><span></span><code>(lldb) breakpoint set --file primes.veya --line 4
+Breakpoint 1: where = primes`f_sieve + 132 at primes.veya:4:3
+(lldb) bt
+  * frame #0: primes`f_sieve at primes.veya:4:3
+    frame #1: primes`main at primes.veya:20:1
+</code></pre></div>
+
+<p>With <code>--backend=c --debug</code> the C backend uses <code>#line</code> directives and the C
+compiler's <code>-g</code>, which also lets the debugger show local variables.</p>
+<p>The compiler is one binary with the runtime library embedded in it. It needs
+only a system linker driver (<code>cc</code>) to link the final executable; set
+<code>VEYA_LINKER</code> to use a different one.</p>
+<h3 id="backends">Backends</h3>
+<table>
+<thead>
+<tr>
+<th>backend</th>
+<th>how</th>
+<th>when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cranelift, in memory (default for <code>run</code>)</td>
+<td>AST → Cranelift IR → machine code in memory, runtime linked into the compiler</td>
+<td>instant runs: no linker, no files</td>
+</tr>
+<tr>
+<td>Cranelift (default for <code>build</code>)</td>
+<td>AST → Cranelift IR → <code>.o</code> → link with the Rust runtime</td>
+<td>fast builds, no C compiler needed (<code>run --aot</code> uses this too)</td>
+</tr>
+<tr>
+<td>C (<code>--backend=c</code>)</td>
+<td>AST → C → <code>cc -O2</code></td>
+<td>maximum speed: LLVM optimizes harder (vectorization, inlining)</td>
+</tr>
+</tbody>
+</table>
+<p><code>veya emit-c app.veya</code> prints the C the second backend would compile.</p>
+<h2 id="testing">Testing</h2>
+<p><code>veya test</code> runs every <code>test/**/*_test.veya</code> (or <code>spec/**/*_spec.veya</code>). It also takes the files or folders to run, and <code>-n name</code> to run only the tests whose name contains it.</p>
+<div class="hl"><pre><span></span><code><span class="n">require_relative</span><span class="w"> </span><span class="s2">"../src/stack"</span>
+
+<span class="n">describe</span><span class="w"> </span><span class="s2">"Stack"</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">test</span><span class="w"> </span><span class="s2">"pop gives the last push"</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Stack</span><span class="p">(</span><span class="no">Int</span><span class="p">)</span><span class="o">.</span><span class="n">new</span>
+<span class="w">    </span><span class="n">s</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="n">assert_equal</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="o">.</span><span class="n">pop</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div>
+
+<div class="hl"><pre><span></span><code>Stack
+  ✓ pop gives the last push
+  ✗ size counts pushes
+      s.size: expected 2, got 1
+
+2 tests, 1 failure (0.01s)
+</code></pre></div>
+
+<ul>
+<li><strong>What a run does:</strong> each file runs as its own program, so one that doesn't compile or crashes is reported and the others still run. A failed assertion ends its test. An exception the test doesn't rescue fails it too.</li>
+<li><strong>Assertions:</strong> <code>assert</code>, <code>refute</code>, <code>assert_equal</code>, <code>assert_not_equal</code>, <code>assert_nil</code>, <code>assert_includes</code>, <code>assert_in_delta</code>, <code>assert_raises("KeyError") { ... }</code> and <code>flunk</code>. They are macros, so a failure names the code that failed.</li>
+<li><strong>Written in Veya:</strong> the framework is in <code>src/prelude/test.veya</code>, and a file that uses it also runs on its own with <code>veya run</code>.</li>
+<li>See <code>examples/testing.veya</code>.</li>
+</ul>
+<h2 id="projects-and-packages">Projects and packages</h2>
+<p><code>veya new shop</code> makes a project:</p>
+<div class="hl"><pre><span></span><code>shop/
+  veya.toml          name, main program, dependencies
+  src/shop.veya         the library: require "shop"
+  src/main.veya         the program: veya run, veya build
+  test/shop_test.veya   veya test
+</code></pre></div>
+
+<p>Dependencies come from git (a tag, branch or commit) or a local folder:</p>
+<div class="hl"><pre><span></span><code><span class="k">[package]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"shop"</span>
+<span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"src/main.veya"</span>
+
+<span class="k">[dependencies]</span>
+<span class="n">zlib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">git</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"https://github.com/someone/zlib.veya"</span><span class="p">,</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"v1.0"</span><span class="w"> </span><span class="p">}</span>
+<span class="n">util</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"../util"</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<ul>
+<li><strong>Installing:</strong> <code>veya deps</code> installs them, and their own dependencies, into <code>.veya/deps/</code> (git checkouts, links for folders). It writes <code>veya.lock</code> with the exact commits, so the next <code>veya deps</code> gets the same code anywhere. <code>veya deps update</code> moves to the newest commits the manifest allows.</li>
+<li><strong>Requiring:</strong> <code>require "zlib"</code> loads a package's <code>src/zlib.veya</code>, and <code>require "zlib/inflate"</code> its <code>src/inflate.veya</code>. A project's own tests <code>require</code> it by name the same way.</li>
+<li><strong>One version per package:</strong> if two packages ask for one dependency differently, <code>veya deps</code> says who asked for what.</li>
+<li><strong>Running and building:</strong> in a project, <code>veya run [args]</code> and <code>veya build</code> without a file use the main program. The build is named after the package.</li>
+<li><strong>Packages can call C:</strong> a package can wrap a C library with a <code>lib</code> block (see <a href="#the-language-in-one-page">Calling C</a>). The <code>@[Link]</code> libraries are linked into the program that uses it.</li>
+</ul>
+<h2 id="macros">Macros</h2>
+<p>A macro is a method that runs while compiling (<code>macro def</code>), written in
+ordinary Veya. There is no separate template language.</p>
+<div class="hl"><pre><span></span><code><span class="n">macro</span><span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">counters</span><span class="p">(</span><span class="o">*</span><span class="n">names</span><span class="p">)</span>
+<span class="w">  </span><span class="n">names</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">n</span><span class="o">|</span>
+<span class="w">    </span><span class="n">define_method</span><span class="p">(</span><span class="s2">"add_</span><span class="si">#{</span><span class="n">n</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">by</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="o">|</span>
+<span class="w">      </span><span class="nb">instance_variable_set</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">instance_variable_get</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">by</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end</span>
+<span class="w">    </span><span class="n">define_method</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">instance_variable_get</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">macro</span><span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">describable</span>
+<span class="w">  </span><span class="n">define_method</span><span class="p">(</span><span class="ss">:describe</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span><span class="w"> </span><span class="s2">"</span><span class="si">#{</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">#{</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="s2">"</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">#{</span><span class="n">parts</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">", "</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Stats</span>
+<span class="w">  </span><span class="vi">@hits</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="vi">@misses</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="n">counters</span><span class="w"> </span><span class="ss">:hits</span><span class="p">,</span><span class="w"> </span><span class="ss">:misses</span><span class="w">      </span><span class="c1"># runs while compiling</span>
+<span class="w">  </span><span class="n">describable</span>
+<span class="k">end</span>
+</code></pre></div>
+
+<p>Three rules cover it:</p>
+<ol>
+<li><strong><code>macro def</code> runs while compiling.</strong> You call it in a type body (where
+   <code>self</code> is the type) or anywhere an expression can go.</li>
+<li><strong>A block given to <code>define_method</code> or <code>quote</code> is code for the running
+   program.</strong> Macro values it uses are pasted in, like a closure capturing
+   them:</li>
+<li>symbols, strings and numbers become constants;</li>
+<li>code (a macro argument, a quote) becomes code.</li>
+<li><strong>A loop over compile-time values inside that code is unrolled.</strong> This
+   covers <code>self.class.fields.map { ... }</code> and <code>names.each { ... }</code>.</li>
+</ol>
+<p><code>veya expand</code> shows what the compiler sees after macros run:</p>
+<div class="hl"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stats</span>
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">add_hits</span><span class="p">(</span><span class="n">by</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span><span class="p">)</span>
+<span class="w">    </span><span class="vi">@hits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@hits</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">by</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">hits</span>
+<span class="w">    </span><span class="vi">@hits</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="w">  </span><span class="o">...</span>
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">describe</span>
+<span class="w">    </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="s2">"hits=</span><span class="si">#{</span><span class="vi">@hits</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span><span class="w"> </span><span class="s2">"misses=</span><span class="si">#{</span><span class="vi">@misses</span><span class="si">}</span><span class="s2">"</span><span class="o">]</span>
+<span class="w">    </span><span class="s2">"Stats(</span><span class="si">#{</span><span class="n">parts</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">", "</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div>
+
+<p>Macros in expressions return code with <code>quote</code>. Quotes are hygienic: a variable the quote assigns gets a fresh name, so <code>quote { tmp = e; tmp + tmp }</code> can't overwrite the caller's <code>tmp</code>. Code passed in as an argument keeps meaning what it meant at the call site, and assigning to such an argument assigns to the caller's variable (a <code>swap!(a, b)</code> macro works). A macro argument is code, and
+<code>.source</code> gives its text:</p>
+<div class="hl"><pre><span></span><code><span class="n">macro</span><span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">quote</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"</span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2"> = </span><span class="si">#{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="p">}</span>
+<span class="n">show</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">7</span><span class="w">                      </span><span class="c1"># prints: a * 7 = 42</span>
+
+<span class="n">macro</span><span class="w"> </span><span class="k">def</span><span class="w"> </span><span class="nf">fib</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fib</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="nb">puts</span><span class="w"> </span><span class="n">fib</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="w">                    </span><span class="c1"># the program only contains 6765</span>
+</code></pre></div>
+
+<p>What macros can use:</p>
+<ul>
+<li><strong>Values:</strong> numbers, strings, symbols, arrays, ranges, with the usual
+  methods (<code>each</code>, <code>map</code>, <code>select</code>, <code>join</code>, <code>upcase</code>, ...).</li>
+<li><strong>Code:</strong> <code>e.source</code>, <code>e.literal?</code>.</li>
+<li><strong>Types:</strong> <code>self</code>, <code>fields</code>, <code>methods</code>, <code>has_method?</code>, <code>class?</code>/<code>struct?</code>.</li>
+<li><strong>Fields:</strong> <code>f.name</code>, <code>f.type</code>, <code>f.getter?</code>, and <code>f.get(obj)</code>/<code>f.set(obj, v)</code>
+  in generated code.</li>
+<li><strong>Inside generated code:</strong> <code>instance_variable_get</code>/<code>instance_variable_set</code>
+  and <code>send</code> with a name known while compiling.</li>
+<li><strong>Errors:</strong> <code>raise "..."</code> stops compilation with your message at the
+  macro call.</li>
+</ul>
+<p>Hooks run as the program is put together:</p>
+<ul>
+<li><code>macro def self.included(base)</code> in a module runs when a type includes it (<code>extended</code> for <code>extend</code>).</li>
+<li><code>macro def self.inherited(sub)</code> in a class runs for each subclass. Class macros are inherited.</li>
+<li><code>macro def method_missing(name, args)</code> in a class runs while compiling for each call to a method nothing defines. <code>args</code> holds the argument types. It defines the method with <code>define_method</code> and compiling starts over: dynamic finders and attribute proxies without any runtime cost.</li>
+</ul>
+<p>Annotations above fields, <code>@[Validate(min_length: 3)]</code>, are read by macros (<code>f.annotated?(:Validate)</code>, <code>f.annotation(:Validate, :min_length)</code>). <code>to_json</code> honours <code>@[JSON(key: "user_name")]</code> and <code>@[JSON(ignore: true)]</code>. See <code>examples/hooks.veya</code>.</p>
+<p>Limits:</p>
+<ul>
+<li>Macros can't do I/O.</li>
+<li>They have a step budget, so compiling is deterministic and always
+  finishes.</li>
+<li>Methods written by hand win over generated ones with the same name.</li>
+<li>Parameters of <code>define_method</code> blocks need types (<code>|by : Int|</code>), like every
+  method.</li>
+</ul>
+<p>Expansion is a separate pass between the parser and the checker
+(<code>src/macros.rs</code>), so both backends and the REPL see plain code. See
+<code>examples/macros.veya</code>.</p>
+<h2 id="example-apps">Example apps</h2>
+<p>The <code>apps/</code> folder has small, complete programs:</p>
+<table>
+<thead>
+<tr>
+<th>app</th>
+<th>what it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>guess.veya</code></td>
+<td>guess-the-number game: <code>gets</code>, <code>rand</code>, <code>case/when</code> with ranges, nil narrowing</td>
+</tr>
+<tr>
+<td><code>mandelbrot.veya</code></td>
+<td>ASCII Mandelbrot set: float math, multiple assignment, <code>ARGV</code></td>
+</tr>
+<tr>
+<td><code>life.veya</code></td>
+<td>Conway's Game of Life: classes, <code>Array.new(n, v)</code>, terminal animation</td>
+</tr>
+<tr>
+<td><code>bank.veya</code></td>
+<td>accounts and transactions: data-carrying <code>enum</code>, exhaustive <code>case/in</code></td>
+</tr>
+<tr>
+<td><code>wordfreq.veya</code></td>
+<td>word frequency from stdin: <code>while (line = gets)</code>, <code>struct</code>, <code>sort_by</code></td>
+</tr>
+<tr>
+<td><code>todo.veya</code></td>
+<td>interactive todo list: a command loop, <code>T?</code> everywhere, <code>reject(&amp;.done)</code></td>
+</tr>
+<tr>
+<td><code>json_api.veya</code></td>
+<td>HTTP/1.1 JSON API server: <code>TCPServer</code>, prefork workers with <code>fork</code>, keep-alive, <code>to_json</code>, a <code>yield</code>-based router</td>
+</tr>
+<tr>
+<td><code>rgrep.veya</code></td>
+<td><code>grep -r</code> with <code>-i -n -c -v -l -g</code>: <code>OptionParser</code>, <code>Dir.glob</code>, <code>File.open</code> + <code>each_line</code>, regex highlighting on a terminal, exit statuses</td>
+</tr>
+<tr>
+<td><code>board.veya</code></td>
+<td>a to-do list web app: <code>Web::App</code> routes, a layout and views in ECR, forms with <code>_method=DELETE</code>, SQLite with <code>?</code> placeholders, static CSS; <code>--self-test</code> starts it and checks it with the HTTP client</td>
+</tr>
+<tr>
+<td><code>gh_repo.veya</code></td>
+<td>GitHub repository stats over HTTPS: <code>HTTP.get</code> with headers, <code>Repo.from_json</code>, <code>ENV</code>, <code>abort</code></td>
+</tr>
+</tbody>
+</table>
+<div class="hl"><pre><span></span><code>veya<span class="w"> </span>run<span class="w"> </span>apps/guess.veya
+veya<span class="w"> </span>run<span class="w"> </span>--release<span class="w"> </span>apps/mandelbrot.veya<span class="w"> </span><span class="m">100</span>
+cat<span class="w"> </span>README.md<span class="w"> </span><span class="p">|</span><span class="w"> </span>veya<span class="w"> </span>run<span class="w"> </span>apps/wordfreq.veya<span class="w"> </span><span class="m">15</span>
+veya<span class="w"> </span>build<span class="w"> </span>apps/rgrep.veya<span class="w"> </span>-o<span class="w"> </span>rgrep<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>./rgrep<span class="w"> </span>-n<span class="w"> </span><span class="s2">"def \w+"</span><span class="w"> </span>apps/
+veya<span class="w"> </span>run<span class="w"> </span>apps/gh_repo.veya<span class="w"> </span>crystal-lang/crystal
+veya<span class="w"> </span>run<span class="w"> </span>apps/board.veya<span class="w">          </span><span class="c1"># then open http://localhost:3000</span>
+</code></pre></div>
+
+<h2 id="performance">Performance</h2>
+<p>The timings below come from <code>bench/</code> on an Apple-silicon Mac. Each column
+covers the same program written idiomatically in each language.</p>
+<table>
+<thead>
+<tr>
+<th>test</th>
+<th>Veya (Cranelift)</th>
+<th>Veya (C backend)</th>
+<th>Rust (<code>-O</code>)</th>
+<th>Ruby 4.0</th>
+<th>Ruby + YJIT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fib(32)</code> (recursion)</td>
+<td>6 ms</td>
+<td>5 ms</td>
+<td>4–7 ms</td>
+<td>102 ms</td>
+<td>17 ms</td>
+</tr>
+<tr>
+<td><code>select.map.sum</code> × 50 over 200k structs</td>
+<td>14 ms</td>
+<td>3 ms</td>
+<td>2–6 ms</td>
+<td>420 ms</td>
+<td>312 ms</td>
+</tr>
+<tr>
+<td>float loop, 50M iterations</td>
+<td>30 ms</td>
+<td>28 ms</td>
+<td>27–41 ms</td>
+<td>1998 ms</td>
+<td>1086 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Cranelift generates good code quickly, but it does not vectorize or inline the
+way LLVM does. Tight loops over structs are about 4× slower than with the C
+backend. Calls, recursion and float math come out about the same. Build times
+go the other way:</p>
+<table>
+<thead>
+<tr>
+<th>program</th>
+<th>Cranelift build</th>
+<th>C backend build (<code>-O2</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>examples/hello.veya</code></td>
+<td>49 ms</td>
+<td>76 ms</td>
+</tr>
+<tr>
+<td><code>apps/json_api.veya</code></td>
+<td>54 ms</td>
+<td>338 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Most of a Cranelift build is the system linker (about 35 ms). Checking takes
+under 1 ms and code generation under 10 ms. <code>veya run</code> skips linking by
+compiling into memory:</p>
+<table>
+<thead>
+<tr>
+<th><code>veya run …</code></th>
+<th>in memory (JIT)</th>
+<th><code>--aot</code> (link + exec)</th>
+<th><code>--backend=c</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>examples/hello.veya</code></td>
+<td>20 ms</td>
+<td>206 ms</td>
+<td>353 ms</td>
+</tr>
+<tr>
+<td><code>apps/bank.veya</code></td>
+<td>22 ms</td>
+<td>208 ms</td>
+<td>247 ms</td>
+</tr>
+</tbody>
+</table>
+<p>To reproduce: <code>cd bench &amp;&amp; ../target/release/veya build bench.veya -o bench_veya &amp;&amp; ./bench_veya</code>
+(add <code>--backend=c</code> for the second column).</p>
+<h3 id="json-and-http">JSON and HTTP</h3>
+<p><code>to_json</code> is generated per type at compile time, the way a serde derive
+works. The benchmark serializes 1000 nested users (230 KB) 1000 times
+(<code>bench/json/</code>):</p>
+<table>
+<thead>
+<tr>
+<th>serializer</th>
+<th>time</th>
+<th>throughput</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Veya <code>users.to_json</code> (Cranelift)</td>
+<td>104 ms</td>
+<td>2.2 GB/s</td>
+</tr>
+<tr>
+<td>Veya <code>users.to_json</code> (C backend)</td>
+<td>85 ms</td>
+<td>2.7 GB/s</td>
+</tr>
+<tr>
+<td>Rust <code>serde_json::to_string</code> (derive)</td>
+<td>157 ms</td>
+<td>1.5 GB/s</td>
+</tr>
+<tr>
+<td>Ruby 4.0 <code>JSON.generate(users.map(&amp;:to_h))</code></td>
+<td>637 ms</td>
+<td>0.36 GB/s</td>
+</tr>
+<tr>
+<td>Ruby, generator only (hashes pre-built)</td>
+<td>281 ms</td>
+<td>0.82 GB/s</td>
+</tr>
+</tbody>
+</table>
+<p>Reading the same document back, 200 times (best of 5; Cranelift and C
+backends within a few percent):</p>
+<table>
+<thead>
+<tr>
+<th>parser</th>
+<th>time</th>
+<th>throughput</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Veya <code>JSON.parse</code> (to <code>JSON::Any</code>)</td>
+<td>46 ms</td>
+<td>1.0 GB/s</td>
+</tr>
+<tr>
+<td>Veya <code>Array(User).from_json</code> (typed objects)</td>
+<td>139 ms</td>
+<td>330 MB/s</td>
+</tr>
+<tr>
+<td>Ruby 4.0 <code>JSON.parse</code> (json 3.1, to hashes)</td>
+<td>134 ms</td>
+<td>344 MB/s</td>
+</tr>
+<tr>
+<td>Ruby, <code>JSON.parse</code> + <code>Struct.new</code> per user</td>
+<td>260 ms</td>
+<td>177 MB/s</td>
+</tr>
+</tbody>
+</table>
+<p><code>JSON.parse</code> builds the whole document in one arena:
+- Strings without escapes are slices of the input text.
+- Each array and object is copied in once, when its bracket closes.
+- Freeing the document frees a few blocks.</p>
+<p><code>JSON::Any</code> values are small handles, made when a node is read. <code>from_json</code>
+also allocates the objects and strings it returns.</p>
+<p>Veya's serialized output is byte-for-byte identical to Ruby's. The data favors Veya:
+its scores (<code>i * 1.25</code>) are short decimals, which both backends print with an
+integer-only fast path. With scores like <code>i / 3.0</code> the Cranelift backend
+(whose runtime uses Rust's shortest-float formatting) does 1.45 GB/s, about
+the same as serde. The C backend's runtime falls back to an <code>snprintf</code> loop
+there and drops to 200 MB/s.</p>
+<p><code>apps/json_api.veya</code> is an HTTP server written in Veya. It runs against the
+same API in Rust (std + serde, one thread per worker) and in Ruby
+(<code>TCPServer</code> + <code>fork</code>). The setup is 4 workers and 4 keep-alive connections,
+with the load generator on the same machine (<code>bench/http/run.sh</code>). Each
+number is the median of 3 runs, in req/s:</p>
+<table>
+<thead>
+<tr>
+<th>endpoint</th>
+<th>Veya (Cranelift)</th>
+<th>Veya (C)</th>
+<th>Rust</th>
+<th>Ruby</th>
+<th>Ruby + YJIT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /</code> (text, 66 B)</td>
+<td>~128k</td>
+<td>~128k</td>
+<td>~132k</td>
+<td>~119k</td>
+<td>~115k</td>
+</tr>
+<tr>
+<td><code>GET /users/7</code> (220 B)</td>
+<td>~126k</td>
+<td>~125k</td>
+<td>~128k</td>
+<td>~109k</td>
+<td>~113k</td>
+</tr>
+<tr>
+<td><code>GET /users</code> (11 KB)</td>
+<td>~102k</td>
+<td>~103k</td>
+<td>~87k</td>
+<td>~36k</td>
+<td>~51k</td>
+</tr>
+</tbody>
+</table>
+<p>Small responses are limited by syscalls and loopback latency, so all the
+servers score about the same. Once a response carries real serialization
+work, Veya matches or beats Rust and runs about twice as fast as Ruby. These
+numbers are noisy, since the machine was running other jobs at the time.</p>
+<h2 id="how-it-works">How it works</h2>
+<div class="hl"><pre><span></span><code>source ─▶ lexer ─▶ parser ─▶ macros ─▶ checker ──▶ Cranelift IR ─▶ .o ─▶ link with rt (Rust) ─▶ native binary
+          (Ruby-style       (run at    (type        └▶ C ─▶ cc (--backend=c)
+           tokenizing)       compile    inference,
+                             time)      diagnostics)
+</code></pre></div>
+
+<ul>
+<li><code>src/lexer.rs</code>: tokens carry a "space before" flag, so <code>foo -1</code> (a call) and <code>foo - 1</code> (subtraction) can be told apart the way Ruby does.</li>
+<li><code>src/parser.rs</code>: a precedence-climbing parser. It tracks which names are local variables, which is how optional parentheses and command calls work.</li>
+<li><code>src/macros.rs</code>: macro expansion, a pass before checking. It holds a small interpreter for compile-time code and the substitution that pastes macro values into generated code. <code>src/printer.rs</code> prints the result for <code>veya expand</code>.</li>
+<li><code>src/check.rs</code>: the front end shared by both backends. It type-checks the whole program, produces every diagnostic, and records each function's inferred signature. It assembles a C program only when <code>--backend=c</code> asks for one.</li>
+<li><code>src/codegen/</code>: the checker's implementation and the C backend.</li>
+<li><code>src/clif/</code>: the Cranelift backend. It reuses the checker's types and signatures and lowers the AST straight to IR.</li>
+<li><code>layout.rs</code>: memory layouts. Scalars are SSA values, <code>String</code>/<code>Array</code>/classes are one pointer, and structs, enums, <code>Range</code> and <code>T?</code> of value types live in memory with C-compatible layouts.</li>
+<li><code>values.rs</code>: reference counting (inline retain), coercions, strings, and per-type hook functions (<code>drop</code>, <code>retain</code>, <code>==</code>, <code>to_s</code>, <code>inspect</code>, <code>to_json</code>) generated on demand.</li>
+<li><code>calls.rs</code>: calls, constructors, and inlining. Methods that <code>yield</code> are always inlined, and small one-expression methods are inlined too, because Cranelift doesn't inline calls itself. <code>next</code>/<code>break</code>/<code>return</code> become jumps to join blocks.</li>
+<li><code>iter.rs</code>: iteration fusion. Adapters wrap the loop body and a terminal drives one loop.</li>
+<li><code>patterns.rs</code>: <code>case/when</code> and <code>case/in</code>. Pattern tests branch away early, so other enum variants' fields are never read.</li>
+<li><code>link.rs</code>: writes the object file and links it with the embedded runtime.</li>
+<li><code>run_jit</code> and <code>repl_eval</code> (in <code>mod.rs</code>): the same code generator over <code>cranelift-jit</code>. Runtime symbols resolve to the copy of <code>rt</code> linked into the compiler, and the program's <code>main</code> runs in the compiler process.</li>
+<li><code>src/fmt.rs</code>: the formatter (re-indents from tokens, so comments and spacing inside lines stay). <code>src/lsp.rs</code>: the language server, built on the same front end (<code>check::prepare</code>).</li>
+<li><code>src/repl.rs</code>: the REPL loop. Each input becomes a small program made of the accumulated definitions plus the new statements. The checker sees earlier variables as already-assigned locals, and the generated <code>main</code> loads them from session memory and hands them back when it finishes.</li>
+<li><code>src/closures.rs</code>: which locals closures capture (a scan by name). Those locals live in heap cells; a closure is <code>{rc, fn, dtor, captures...}</code> and its body is compiled as its own function.</li>
+<li><code>src/generics.rs</code>: copies generic types per use (<code>Stack(Int)</code>).</li>
+<li><code>src/loader.rs</code>: loads a program from several files (<code>require</code>). <code>src/modules.rs</code> expands <code>include</code>/<code>extend</code> and module functions before checking.</li>
+<li><code>src/pkg.rs</code>: <code>veya.toml</code>, <code>veya deps</code> (git checkouts and the lock file), and finding a package for <code>require</code>.</li>
+<li><code>src/ffi.rs</code>: <code>lib</code> blocks checked into C signatures (<code>codegen/ffi.rs</code> and <code>clif/ffi.rs</code> lower the calls, <code>rt/src/ffi.rs</code> has Pointer's memory access).</li>
+<li><code>src/sys.rs</code>: one table of system calls (files, directories, <code>ENV</code>, the clock) that both backends lower the same way, onto <code>rt/src/sys.rs</code>. <code>src/prelude.rs</code> adds library code written in Veya (<code>src/prelude/*.veya</code>) to programs that use it.</li>
+<li><code>src/desugar.rs</code>: rewrites shared by both backends. Hash methods with a block become loops over entry numbers written in ordinary syntax, so <code>break</code>, <code>next</code> and iterator fusion work as everywhere else.</li>
+<li><code>rt/</code>: the runtime in Rust (strings, arrays of any element type, hashes, printing, JSON encoders and the JSON parser, sockets, <code>fork</code>). The C backend links it too, for <code>Hash</code>. <code>build.rs</code> compiles it as a static library embedded in the compiler (for executables), and the compiler also links it directly (for the JIT).</li>
+<li><code>runtime/*.h</code>: the C backend's runtime.</li>
+</ul>
+<p>Memory conventions in the generated code:</p>
+<ul>
+<li>every expression produces an owned value;</li>
+<li>parameters are borrowed;</li>
+<li>named locals and temporaries are released when the function returns. Cranelift emits the releases in the common exit block, and the C backend uses <code>__attribute__((cleanup))</code>.</li>
+</ul>
+<p>All examples and apps run with zero leaks under macOS <code>leaks</code> on both
+backends, and the C backend runs them with no AddressSanitizer errors.
+Cranelift's IR verifier checks every generated function. Reference cycles between classes are not collected
+yet.</p>
+  </main>
+</div>
+<footer><div class="wrap">Veya · <a href="https://github.com/veya-lang">github.com/veya-lang</a></div></footer>
+</body>
+</html>

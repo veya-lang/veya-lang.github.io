@@ -1,0 +1,6 @@
+@[Link("z")]
+lib LibZ
+  fun crc32(crc : UInt64, buf : String, len : UInt32) : UInt64
+end
+
+puts LibZ.crc32(0, "hello world", 11)

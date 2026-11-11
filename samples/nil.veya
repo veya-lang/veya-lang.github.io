@@ -1,0 +1,15 @@
+def city(user : User?) : String
+  user&.address&.city || "unknown"
+end
+
+struct Address
+  getter city : String
+end
+
+struct User
+  getter name : String
+  getter address : Address?
+end
+
+puts city(User.new("Ala", Address.new("Kraków")))
+puts city(nil)

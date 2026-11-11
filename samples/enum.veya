@@ -1,0 +1,14 @@
+enum Shape
+  Circle(r : Float)
+  Rect(w : Float, h : Float)
+end
+
+def area(s : Shape) : Float
+  case s
+  in Circle(r:) then 3.14159 * r * r
+  in Rect(w:, h:) then w * h
+  end
+end
+
+shapes = [Shape::Circle(1.0), Shape::Rect(2.0, 3.0)]
+p shapes.map { |s| area(s) }   # => [3.14159, 6.0]

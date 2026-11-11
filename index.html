@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veya: Ruby's syntax, native speed</title>
+<meta name="description" content="Veya is a statically typed language with Ruby's syntax that compiles to small native binaries, with no garbage collector.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="code.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="/">veya<span>.</span></a>
+  <nav><a href="guide.html">Guide</a><a href="#performance">Performance</a><a href="#status">Status</a></nav>
+</div></header>
+
+<div class="wrap hero">
+  <div>
+    <h1>Ruby's syntax.<br><em>Native</em> speed.</h1>
+    <p class="lead">Veya is a statically typed language that reads like Ruby and compiles to small native binaries. There's no garbage collector and no interpreter, and most types are inferred.</p>
+    <p class="cta"><a class="primary" href="guide.html">Read the guide</a><a class="secondary" href="#status">Status</a></p>
+    <p class="say">Veya is said "VAY-ah".</p>
+  </div>
+  <div>
+<div class="hl"><pre><span></span><span class="n">struct</span><span class="w"> </span><span class="no">Order</span>
+<span class="w">  </span><span class="n">getter</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+<span class="w">  </span><span class="n">getter</span><span class="w"> </span><span class="n">qty</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Int</span>
+<span class="w">  </span><span class="n">getter</span><span class="w"> </span><span class="n">price</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">Float</span>
+<span class="k">end</span>
+
+<span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="no">Order</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"tea"</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="o">.</span><span class="mi">5</span><span class="p">),</span><span class="w"> </span><span class="no">Order</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"cake"</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="o">.</span><span class="mi">0</span><span class="p">),</span>
+<span class="w">          </span><span class="no">Order</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"tea"</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="o">.</span><span class="mi">5</span><span class="p">)</span><span class="o">]</span>
+
+<span class="n">totals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="o">&amp;.</span><span class="n">item</span><span class="p">)</span>
+<span class="w">  </span><span class="o">.</span><span class="n">transform_values</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">os</span><span class="o">|</span><span class="w"> </span><span class="n">os</span><span class="o">.</span><span class="n">sum</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">o</span><span class="o">|</span><span class="w"> </span><span class="n">o</span><span class="o">.</span><span class="n">qty</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">o</span><span class="o">.</span><span class="n">price</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="n">totals</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="o">|</span><span class="w"> </span><span class="o">-</span><span class="n">total</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="o">|</span>
+<span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"</span><span class="si">#{</span><span class="n">item</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">total</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">end</span>
+</pre></div>
+
+<pre class="out">tea    22.5
+cake   7.0</pre>
+  </div>
+</div>
+
+<section><div class="wrap">
+  <h2>What you get</h2>
+  <p class="sub">Write Ruby-like code with blocks, structs, enums and string interpolation. The compiler checks the types and turns the program into a single executable.</p>
+  <div class="grid">
+    <div class="card"><h3>Compiled ahead of time</h3><p>Cranelift writes native code directly, and a C backend is there for optimized builds. A hello world is a 460 KB binary that needs nothing installed.</p></div>
+    <div class="card"><h3>No garbage collector</h3><p>Memory is reference counted, with most counts handled at compile time. Blocks passed to <code>yield</code> are inlined, and iterator chains become one loop.</p></div>
+    <div class="card"><h3>Types you rarely write</h3><p>Method parameters carry types, and everything else is inferred. <code>nil</code> is only allowed where the type says <code>T?</code>, so nil errors are caught at compile time.</p></div>
+    <div class="card"><h3>Errors that help</h3><p>Compile errors show your code with a plain-language label and a fix you can paste, plus "did you mean" suggestions.</p></div>
+    <div class="card"><h3>Batteries for real programs</h3><p>Files and processes, an <code>OptionParser</code>, an HTTP(S) client, a web framework with templates, SQLite, JSON, regexes, fibers and threads.</p></div>
+    <div class="card"><h3>One tool</h3><p><code>veya run</code>, <code>build</code>, <code>test</code>, <code>fmt</code>, <code>new</code>, <code>deps</code>, a REPL and a language server for editors.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>A quick look</h2>
+  <p class="sub">Every snippet on this page compiles with today's compiler.</p>
+  <div class="pair">
+    <div><h3>Nil safety</h3><p><code>User?</code> may be nil and <code>User</code> may not. <code>&amp;.</code> and <code>||</code> work as in Ruby, and an unchecked call on a <code>T?</code> doesn't compile.</p><div class="hl"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">city</span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">User</span><span class="sc">?)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+<span class="w">  </span><span class="n">user</span><span class="o">&amp;.</span><span class="n">address</span><span class="o">&amp;.</span><span class="n">city</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"unknown"</span>
+<span class="k">end</span>
+
+<span class="n">struct</span><span class="w"> </span><span class="no">Address</span>
+<span class="w">  </span><span class="n">getter</span><span class="w"> </span><span class="n">city</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+<span class="k">end</span>
+
+<span class="n">struct</span><span class="w"> </span><span class="no">User</span>
+<span class="w">  </span><span class="n">getter</span><span class="w"> </span><span class="nb">name</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+<span class="w">  </span><span class="n">getter</span><span class="w"> </span><span class="n">address</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Address</span><span class="p">?</span>
+<span class="k">end</span>
+
+<span class="nb">puts</span><span class="w"> </span><span class="n">city</span><span class="p">(</span><span class="no">User</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"Ala"</span><span class="p">,</span><span class="w"> </span><span class="no">Address</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"Kraków"</span><span class="p">)))</span>
+<span class="nb">puts</span><span class="w"> </span><span class="n">city</span><span class="p">(</span><span class="kp">nil</span><span class="p">)</span>
+</pre></div>
+</div>
+    <div><h3>Enums with data</h3><p>Pattern matching with <code>case/in</code> is exhaustive: if you leave out a variant, the program doesn't compile.</p><div class="hl"><pre><span></span><span class="n">enum</span><span class="w"> </span><span class="no">Shape</span>
+<span class="w">  </span><span class="no">Circle</span><span class="p">(</span><span class="n">r</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">Float</span><span class="p">)</span>
+<span class="w">  </span><span class="no">Rect</span><span class="p">(</span><span class="n">w</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">Float</span><span class="p">,</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">Float</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">area</span><span class="p">(</span><span class="n">s</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">Shape</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">Float</span>
+<span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">s</span>
+<span class="w">  </span><span class="k">in</span><span class="w"> </span><span class="no">Circle</span><span class="p">(</span><span class="ss">r</span><span class="p">:)</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="mi">3</span><span class="o">.</span><span class="mi">14159</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">r</span>
+<span class="w">  </span><span class="k">in</span><span class="w"> </span><span class="no">Rect</span><span class="p">(</span><span class="ss">w</span><span class="p">:,</span><span class="w"> </span><span class="ss">h</span><span class="p">:)</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">h</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">shapes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="no">Shape</span><span class="o">::</span><span class="no">Circle</span><span class="p">(</span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="no">Shape</span><span class="o">::</span><span class="no">Rect</span><span class="p">(</span><span class="mi">2</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span><span class="o">]</span>
+<span class="nb">p</span><span class="w"> </span><span class="n">shapes</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">s</span><span class="o">|</span><span class="w"> </span><span class="n">area</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># =&gt; [3.14159, 6.0]</span>
+</pre></div>
+</div>
+  </div>
+  <div class="pair">
+    <div><h3>Command-line tools</h3><p><code>OptionParser</code> parses the options, and files are read line by line. The result builds into a single binary you can copy anywhere.</p><div class="hl"><pre><span></span><span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">false</span>
+<span class="n">files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">OptionParser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">ARGV</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">o</span><span class="o">|</span>
+<span class="w">  </span><span class="n">o</span><span class="o">.</span><span class="n">banner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"usage: count [-v] FILE..."</span>
+<span class="w">  </span><span class="n">o</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="s2">"-v"</span><span class="p">,</span><span class="w"> </span><span class="s2">"--verbose"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Say more"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">true</span><span class="w"> </span><span class="p">}</span>
+<span class="k">end</span>
+<span class="n">files</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span>
+<span class="w">  </span><span class="n">lines</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="no">File</span><span class="o">.</span><span class="n">each_line</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">lines</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="n">verbose</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="s2">"</span><span class="si">#{</span><span class="n">f</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">lines</span><span class="si">}</span><span class="s2"> lines"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">lines</span><span class="o">.</span><span class="n">to_s</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+    <div><h3>Web apps</h3><p><code>Web::App</code> gives you routes, forms and JSON, with ECR templates compiled into the program. Each connection runs in its own fiber.</p><div class="hl"><pre><span></span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Web</span><span class="o">::</span><span class="no">App</span><span class="o">.</span><span class="n">new</span>
+<span class="n">app</span><span class="o">.</span><span class="n">get</span><span class="w"> </span><span class="s2">"/hello/:name"</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span>
+<span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">html</span><span class="w"> </span><span class="s2">"&lt;h1&gt;Hello, </span><span class="si">#{</span><span class="no">HTML</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">params</span><span class="o">[</span><span class="s2">"name"</span><span class="o">]</span><span class="p">)</span><span class="si">}</span><span class="s2">!&lt;/h1&gt;"</span>
+<span class="k">end</span>
+<span class="n">app</span><span class="o">.</span><span class="n">get</span><span class="w"> </span><span class="s2">"/api/time"</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span>
+<span class="w">  </span><span class="n">c</span><span class="o">.</span><span class="n">json</span><span class="w"> </span><span class="sx">%({"now": </span><span class="si">#{</span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="o">.</span><span class="n">to_i</span><span class="si">}</span><span class="sx">})</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+  </div>
+  <div class="pair">
+    <div><h3>Fibers and channels</h3><p>Fibers are lightweight, and while one waits on a socket the others keep running. For CPU-bound work there are OS threads that share nothing.</p><div class="hl"><pre><span></span><span class="n">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Channel</span><span class="p">(</span><span class="nb">String</span><span class="p">)</span><span class="o">.</span><span class="n">new</span>
+<span class="o">[</span><span class="s2">"a"</span><span class="p">,</span><span class="w"> </span><span class="s2">"b"</span><span class="p">,</span><span class="w"> </span><span class="s2">"c"</span><span class="o">].</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="nb">name</span><span class="o">|</span>
+<span class="w">  </span><span class="n">spawn</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="nb">sleep</span><span class="w"> </span><span class="mi">0</span><span class="o">.</span><span class="mo">01</span>
+<span class="w">    </span><span class="n">results</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">"</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2"> done"</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+<span class="mi">3</span><span class="o">.</span><span class="n">times</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">receive</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+    <div><h3>Calling C</h3><p>A <code>lib</code> block declares C functions. Both backends call them directly, with no wrapper code.</p><div class="hl"><pre><span></span><span class="err">@</span><span class="o">[</span><span class="no">Link</span><span class="p">(</span><span class="s2">"z"</span><span class="p">)</span><span class="o">]</span>
+<span class="n">lib</span><span class="w"> </span><span class="no">LibZ</span>
+<span class="w">  </span><span class="n">fun</span><span class="w"> </span><span class="n">crc32</span><span class="p">(</span><span class="n">crc</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">UInt64</span><span class="p">,</span><span class="w"> </span><span class="n">buf</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">UInt32</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="no">UInt64</span>
+<span class="k">end</span>
+
+<span class="nb">puts</span><span class="w"> </span><span class="no">LibZ</span><span class="o">.</span><span class="n">crc32</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s2">"hello world"</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">)</span>
+</pre></div>
+</div>
+  </div>
+</div></section>
+
+<section id="performance"><div class="wrap">
+  <h2>Performance</h2>
+  <p class="sub">Serializing 1000 nested users (230 KB) 1000 times. <code>to_json</code> is generated per type at compile time, the way a serde derive works.</p>
+  <table>
+    <tr><th>serializer</th><th class="num">time</th><th class="num">throughput</th></tr>
+    <tr class="us"><td>Veya <code>users.to_json</code> (C backend)</td><td class="num">85 ms</td><td class="num">2.7 GB/s</td></tr>
+    <tr class="us"><td>Veya <code>users.to_json</code> (Cranelift)</td><td class="num">104 ms</td><td class="num">2.2 GB/s</td></tr>
+    <tr><td>Rust <code>serde_json::to_string</code></td><td class="num">157 ms</td><td class="num">1.5 GB/s</td></tr>
+    <tr><td>Ruby 4.0 <code>JSON.generate</code></td><td class="num">637 ms</td><td class="num">0.36 GB/s</td></tr>
+  </table>
+  <p class="sub">A <code>Web::App</code> answers about 85,000 keep-alive requests a second from a single process on an M-series Mac. The full numbers and how they were measured are in the <a href="guide.html#performance">guide</a>.</p>
+</div></section>
+
+<section id="status"><div class="wrap">
+  <h2>Status</h2>
+  <div class="status"><p><strong>Veya 0.1 is a preview.</strong> The language, the compiler and the standard library are moving quickly, and there are no releases or installers yet. It's developed and tested on macOS (arm64). Linux is supported in the code but not tested yet.</p></div>
+  <p class="sub" style="margin-top:20px">Done: the language core, FFI, packages, a test runner, tools for command-line programs, and web apps. Next: desktop apps through C GUI libraries, then a first release.</p>
+</div></section>
+
+<footer><div class="wrap">Veya · <a href="https://github.com/veya-lang">github.com/veya-lang</a></div></footer>
+</body>
+</html>
